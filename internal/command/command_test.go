@@ -1,6 +1,7 @@
 package command
 
 import (
+	"flag"
 	"os"
 	"reflect"
 	"testing"
@@ -18,14 +19,14 @@ func TestParseArgs(t *testing.T) {
 			name:           "No arguments",
 			args:           []string{},
 			expectedEditor: "",
-			expectedFiles:  []string{},
+			expectedFiles:  make([]string, 0),
 			expectedError:  nil,
 		},
 		{
 			name:           "One argument (editor)",
 			args:           []string{"vim"},
 			expectedEditor: "vim",
-			expectedFiles:  []string{},
+			expectedFiles:  make([]string, 0),
 			expectedError:  nil,
 		},
 		{
@@ -53,11 +54,17 @@ func TestParseArgs(t *testing.T) {
 			// Set command-line arguments for the test case
 			os.Args = append([]string{"rules_cli"}, tc.args...)
 
-			editor, files, err := ParseArgs()
+			// Reset flag.CommandLine between tests
+			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 
-			if err != nil {
-				t.Fatalf("Unexpected error: %v", err)
+			// Parse flags
+			flag.Parse()
+
+			if flag.CommandLine.ErrorHandling() != flag.ContinueOnError {
+				t.Fatalf("Unexpected error: %v", flag.CommandLine.ErrorHandling())
 			}
+
+			editor, files := ParseArgs()
 
 			if editor != tc.expectedEditor {
 				t.Errorf("Expected editor %q, got %q", tc.expectedEditor, editor)

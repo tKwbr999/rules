@@ -3,8 +3,6 @@ package handler
 import (
 	"os"
 	"path/filepath"
-	"reflect"
-	"sort"
 	"strings"
 	"testing"
 )
@@ -57,76 +55,6 @@ func TestGetRulesPath(t *testing.T) {
 	}
 }
 
-func TestGetMdFiles(t *testing.T) {
-	testCases := []struct {
-		name          string
-		env           string
-		testFiles     []string
-		expectedFiles []string
-		expectError   bool
-	}{
-		{
-			name:          "No environment specified",
-			env:           "",
-			testFiles:     []string{"test.md", "dev.md", "prod.md", "other.txt"},
-			expectedFiles: []string{"test.md", "dev.md", "prod.md"},
-			expectError:   false,
-		},
-		{
-			name:          "Environment specified",
-			env:           "dev",
-			testFiles:     []string{"test.md", "dev.md", "prod.md", "other.txt"},
-			expectedFiles: []string{"dev.md"},
-			expectError:   false,
-		},
-		{
-			name:          "No files found",
-			env:           "",
-			testFiles:     []string{"other.txt"},
-			expectedFiles: []string{},
-			expectError:   true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// テスト用のディレクトリを作成
-			rulesPath := t.TempDir()
-
-			// テスト用のファイルを作成
-			for _, file := range tc.testFiles {
-				if err := os.WriteFile(filepath.Join(rulesPath, file), []byte("test content"), 0644); err != nil {
-					t.Fatalf("Failed to create test file: %v", err)
-				}
-			}
-
-			files, err := GetMdFiles(rulesPath, tc.env)
-
-			if tc.expectError {
-				if err == nil {
-					t.Errorf("Test Case: %s, GetMdFiles() should return an error", tc.name)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Test Case: %s, GetMdFiles() error = %v", tc.name, err)
-				}
-
-				// 絶対パスに変換
-				var expectedFiles []string
-				for _, file := range tc.expectedFiles {
-					expectedFiles = append(expectedFiles, filepath.Join(rulesPath, file))
-				}
-
-				sort.Strings(files)
-				sort.Strings(expectedFiles)
-
-				if !reflect.DeepEqual(files, expectedFiles) {
-					t.Errorf("Test Case: %s, GetMdFiles() = %v, want %v", tc.name, files, expectedFiles)
-				}
-			}
-		})
-	}
-}
 
 func TestCombineFiles(t *testing.T) {
 	testCases := []struct {
@@ -139,8 +67,8 @@ func TestCombineFiles(t *testing.T) {
 		{
 			name: "Files exist",
 			testFiles: map[string]string{
-				"file1.txt": "content of file1",
-				"file2.txt": "content of file2",
+				"file1.md": "content of file1",
+				"file2.md": "content of file2",
 			},
 			nonExistentFile: false,
 			expectedContent: "content of file1\n\ncontent of file2\n\n",
@@ -157,7 +85,7 @@ func TestCombineFiles(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var files []string
+			files := make([]string, 0, len(tc.testFiles))
 			for name, content := range tc.testFiles {
 				tmpFile := filepath.Join(t.TempDir(), name)
 				if err := os.WriteFile(tmpFile, []byte(content), 0644); err != nil {

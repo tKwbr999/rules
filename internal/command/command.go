@@ -5,9 +5,9 @@ import (
 )
 
 // コマンドライン引数を解析する
-func ParseArgs() (string, []string, error) {
+func ParseArgs() (string, []string) {
 	editor := ""
-	var files []string
+	files := make([]string, 0)
 
 	flag.Parse()
 
@@ -19,5 +19,5 @@ func ParseArgs() (string, []string, error) {
 		files = append(files, flag.Arg(i))
 	}
 
-	return editor, files, nil
+	return editor, files
 }

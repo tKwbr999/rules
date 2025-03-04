@@ -16,24 +16,6 @@ func GetRulesPath() (string, error) {
 	return rulesPath, nil
 }
 
-// .mdファイルのリストを取得する
-func GetMdFiles(rulesPath, env string) ([]string, error) {
-	filePattern := "*.md"
-	if env != "" {
-		filePattern = env + ".md"
-	}
-
-	mdFiles, err := filepath.Glob(filepath.Join(rulesPath, filePattern))
-	if err != nil {
-		return nil, fmt.Errorf("ファイルの検索に失敗しました: %w", err)
-	}
-
-	if len(mdFiles) == 0 {
-		return nil, fmt.Errorf("%sに該当する.mdファイルが見つかりませんでした (パス: %s)", filePattern, rulesPath)
-	}
-
-	return mdFiles, nil
-}
 
 // ファイルの内容を結合する
 func CombineFiles(files []string) (string, error) {
@@ -47,6 +29,46 @@ func CombineFiles(files []string) (string, error) {
 		content.WriteString("\n\n")
 	}
 	return content.String(), nil
+}
+
+// .mdファイルのリストを取得する
+func GetMdFiles(rulesPath string, files []string) ([]string, error) {
+	var mdFiles []string
+	var missingFiles []string
+
+	if len(files) == 0 {
+		// 環境が指定されていない場合は、すべての.mdファイルを取得
+		pattern := filepath.Join(rulesPath, "*.md")
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			return nil, fmt.Errorf("ファイルの検索に失敗しました: %w", err)
+		}
+		mdFiles = append(mdFiles, matches...)
+	} else {
+		// 環境が指定されている場合は、指定されたファイルのみを検索
+		for _, file := range files {
+			pattern := filepath.Join(rulesPath, file+".md")
+			matches, err := filepath.Glob(pattern)
+			if err != nil {
+				return nil, fmt.Errorf("ファイルの検索に失敗しました: %w", err)
+			}
+			if len(matches) > 0 {
+				mdFiles = append(mdFiles, matches...)
+			} else {
+				missingFiles = append(missingFiles, file+".md")
+			}
+		}
+	}
+
+	if len(mdFiles) == 0 && len(missingFiles) == 0 {
+		return nil, fmt.Errorf("指定されたファイルが見つかりませんでした (パス: %s)", rulesPath)
+	}
+
+	if len(missingFiles) > 0 {
+		fmt.Printf("警告: ファイルが見つかりませんでした: %s\n", strings.Join(missingFiles, ", "))
+	}
+
+	return mdFiles, nil
 }
 
 // 出力ファイルのパスを取得する
