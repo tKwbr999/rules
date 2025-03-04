@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,14 +10,14 @@ import (
 
 // コマンドライン引数を解析する
 func parseArgs() (string, string, error) {
-	if len(os.Args) < 2 {
-		return "", "", fmt.Errorf("エディタの指定が必要です")
-	}
-
-	editor := os.Args[1]
+	editor := ""
 	env := ""
-	if len(os.Args) > 2 {
-		env = os.Args[2]
+
+	if flag.NArg() > 0 {
+		editor = flag.Arg(0)
+	}
+	if flag.NArg() > 1 {
+		env = flag.Arg(1)
 	}
 
 	return editor, env, nil
@@ -76,11 +77,14 @@ func getOutputPath(editor string) (string, error) {
 
 // 使用方法を表示する
 func printUsage() {
-	fmt.Println("使用方法: rules <エディタ> [環境]")
+	fmt.Println("使用方法: rules [オプション] <エディタ> [環境]")
 	fmt.Println()
 	fmt.Println("説明:")
 	fmt.Println("  RULES_PATH環境変数で指定されたディレクトリから.mdファイルを読み込み、")
 	fmt.Println("  指定されたエディタ用のrulesファイルを現在のディレクトリに作成します。")
+	fmt.Println()
+	fmt.Println("オプション:")
+	fmt.Println("  -l, --list  利用可能な.mdファイルの一覧を表示します")
 	fmt.Println()
 	fmt.Println("引数:")
 	fmt.Println("  <エディタ>  出力ファイル名の一部として使用される（例: cline → .clinerules）")
@@ -94,22 +98,46 @@ func printUsage() {
 	fmt.Println("  rules cline           # すべての.mdファイルから.clinerules作成")
 	fmt.Println("  rules cline frontend  # frontend.mdファイルから.clinerules作成")
 	fmt.Println("  rules cursor backend  # backend.mdファイルから.cursorrules作成")
+	fmt.Println("  rules -l              # 利用可能な.mdファイルの一覧を表示")
 }
 
 // os.Exit関数をモック可能にするための変数
 var osExit = os.Exit
 
 func main() {
-	// コマンドライン引数の解析
-	editor, env, err := parseArgs()
+	// フラグを定義
+	var listFiles bool
+	flag.BoolVar(&listFiles, "l", false, "利用可能な.mdファイルの一覧を表示")
+	flag.BoolVar(&listFiles, "list", false, "利用可能な.mdファイルの一覧を表示")
+
+	// フラグを解析
+	flag.Parse()
+
+	// RULES_PATH環境変数の取得
+	rulesPath, err := getRulesPath()
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		printUsage()
 		osExit(1)
 	}
 
-	// RULES_PATH環境変数の取得
-	rulesPath, err := getRulesPath()
+	// リスト表示フラグが設定されている場合
+	if listFiles {
+		fmt.Println("RULES_PATH:", rulesPath)
+		mdFiles, err := getMdFiles(rulesPath, "")
+		if err != nil {
+			fmt.Printf("エラー: %v\n", err)
+			osExit(1)
+		}
+		fmt.Println("利用可能な.mdファイル:")
+		for _, file := range mdFiles {
+			fmt.Println(filepath.Base(file))
+		}
+		return
+	}
+
+	// コマンドライン引数の解析
+	editor, env, err := parseArgs()
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		printUsage()
