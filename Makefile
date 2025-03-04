@@ -9,3 +9,7 @@ release:
 .PHONY: release-check
 release-check:
 	goreleaser check
+
+.PHONY: rule
+rule:
+	rules_cli cline go-cli-develop

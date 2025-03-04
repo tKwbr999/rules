@@ -6,22 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/tKwbr999/rules_cli/internal/command"
 )
 
-// コマンドライン引数を解析する
-func parseArgs() (string, string, error) {
-	editor := ""
-	env := ""
-
-	if flag.NArg() > 0 {
-		editor = flag.Arg(0)
-	}
-	if flag.NArg() > 1 {
-		env = flag.Arg(1)
-	}
-
-	return editor, env, nil
-}
 
 // RULES_PATH環境変数を取得する
 func getRulesPath() (string, error) {
@@ -108,7 +96,6 @@ func main() {
 	// フラグを定義
 	var listFiles bool
 	flag.BoolVar(&listFiles, "l", false, "利用可能な.mdファイルの一覧を表示")
-	flag.BoolVar(&listFiles, "list", false, "利用可能な.mdファイルの一覧を表示")
 
 	// フラグを解析
 	flag.Parse()
@@ -137,7 +124,7 @@ func main() {
 	}
 
 	// コマンドライン引数の解析
-	editor, env, err := parseArgs()
+	editor, env, err := command.ParseArgs()
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		printUsage()
