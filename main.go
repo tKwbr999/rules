@@ -5,44 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/tKwbr999/rules_cli/internal/command"
 	"github.com/tKwbr999/rules_cli/internal/handler"
 )
-
-// RULES_PATH環境変数を取得する
-func getRulesPath() (string, error) {
-	rulesPath := os.Getenv("RULES_PATH")
-	if rulesPath == "" {
-		return "", fmt.Errorf("RULES_PATH環境変数が設定されていません")
-	}
-	return rulesPath, nil
-}
-
-// ファイルの内容を結合する
-func combineFiles(files []string) (string, error) {
-	var content strings.Builder
-	for _, file := range files {
-		data, err := os.ReadFile(file)
-		if err != nil {
-			return "", fmt.Errorf("ファイルの読み込みに失敗しました (%s): %w", file, err)
-		}
-		content.Write(data)
-		content.WriteString("\n\n")
-	}
-	return content.String(), nil
-}
-
-// 出力ファイルのパスを取得する
-func getOutputPath(editor string) (string, error) {
-	outputFileName := fmt.Sprintf(".%srules", editor)
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("現在のディレクトリの取得に失敗しました: %w", err)
-	}
-	return filepath.Join(currentDir, outputFileName), nil
-}
 
 // 使用方法を表示する
 func printUsage() {
@@ -79,7 +45,7 @@ func main() {
 	flag.Parse()
 
 	// RULES_PATH環境変数の取得
-	rulesPath, err := getRulesPath()
+	rulesPath, err := handler.GetRulesPath()
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		printUsage()
@@ -112,14 +78,14 @@ func main() {
 	}
 
 	// ファイルの内容を結合
-	content, err := combineFiles(mdFiles)
+	content, err := handler.CombineFiles(mdFiles)
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		osExit(1)
 	}
 
 	// 出力先のパスを取得
-	outputPath, err := getOutputPath(editor)
+	outputPath, err := handler.GetOutputPath(editor)
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		osExit(1)

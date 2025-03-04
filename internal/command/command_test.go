@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+var empty []string
+
 func TestParseArgs(t *testing.T) {
 	testCases := []struct {
 		name           string
@@ -17,16 +19,16 @@ func TestParseArgs(t *testing.T) {
 	}{
 		{
 			name:           "No arguments",
-			args:           []string{},
+			args:           empty,
 			expectedEditor: "",
-			expectedFiles:  make([]string, 0),
+			expectedFiles:  empty,
 			expectedError:  nil,
 		},
 		{
 			name:           "One argument (editor)",
 			args:           []string{"vim"},
 			expectedEditor: "vim",
-			expectedFiles:  make([]string, 0),
+			expectedFiles:  empty,
 			expectedError:  nil,
 		},
 		{

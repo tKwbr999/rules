@@ -16,21 +16,6 @@ func GetRulesPath() (string, error) {
 	return rulesPath, nil
 }
 
-
-// ファイルの内容を結合する
-func CombineFiles(files []string) (string, error) {
-	var content strings.Builder
-	for _, file := range files {
-		data, err := os.ReadFile(file)
-		if err != nil {
-			return "", fmt.Errorf("ファイルの読み込みに失敗しました (%s): %w", file, err)
-		}
-		content.Write(data)
-		content.WriteString("\n\n")
-	}
-	return content.String(), nil
-}
-
 // .mdファイルのリストを取得する
 func GetMdFiles(rulesPath string, files []string) ([]string, error) {
 	var mdFiles []string
@@ -69,6 +54,20 @@ func GetMdFiles(rulesPath string, files []string) ([]string, error) {
 	}
 
 	return mdFiles, nil
+}
+
+// ファイルの内容を結合する
+func CombineFiles(files []string) (string, error) {
+	var content strings.Builder
+	for _, file := range files {
+		data, err := os.ReadFile(file)
+		if err != nil {
+			return "", fmt.Errorf("ファイルの読み込みに失敗しました (%s): %w", file, err)
+		}
+		content.Write(data)
+		content.WriteString("\n\n")
+	}
+	return content.String(), nil
 }
 
 // 出力ファイルのパスを取得する

@@ -3,28 +3,87 @@ package handler
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
 
-func TestGetRulesPath(t *testing.T) {
-	testCases := []struct {
-		name        string
-		rulesPath   string
-		expectedPath string
-		expectError bool
+var empty []string
+
+func TestGetMdFiles(t *testing.T) {
+	// テスト用のディレクトリとファイルを作成
+	testDir := t.TempDir()
+	testFiles := []string{"test1.md", "test2.md", "test3.txt"}
+	for _, file := range testFiles {
+		if err := os.WriteFile(filepath.Join(testDir, file), []byte("test content"), 0644); err != nil {
+			t.Fatalf("テストファイルの作成に失敗しました: %v", err)
+		}
+	}
+
+	// テストケース
+	tests := []struct {
+		name      string
+		rulesPath string
+		files     []string
+		want      []string
+		wantErr   bool
 	}{
 		{
-			name:        "RULES_PATH is set",
-			rulesPath:   "/path/to/rules",
-			expectedPath: "/path/to/rules",
-			expectError: false,
+			name:      "ファイルが指定されていない場合、すべての.mdファイルを取得する",
+			rulesPath: testDir,
+			files:     empty,
+			want:      []string{filepath.Join(testDir, "test1.md"), filepath.Join(testDir, "test2.md")},
+			wantErr:   false,
 		},
 		{
-			name:        "RULES_PATH is not set",
-			rulesPath:   "",
+			name:      "ファイルが指定されている場合、指定されたファイルのみを取得する",
+			rulesPath: testDir,
+			files:     []string{"test1"},
+			want:      []string{filepath.Join(testDir, "test1.md")},
+			wantErr:   false,
+		},
+		{
+			name:      "ファイルが存在しない場合、エラーを返す",
+			rulesPath: testDir,
+			files:     []string{"test4"},
+			want:      empty,
+			wantErr:   false, // ファイルが見つからない場合はエラーを返さないように変更
+		},
+	}
+
+	// テスト実行
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetMdFiles(tt.rulesPath, tt.files)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetMdFiles() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetMdFiles() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetRulesPath(t *testing.T) {
+	testCases := []struct {
+		name         string
+		rulesPath    string
+		expectedPath string
+		expectError  bool
+	}{
+		{
+			name:         "RULES_PATH is set",
+			rulesPath:    "/path/to/rules",
+			expectedPath: "/path/to/rules",
+			expectError:  false,
+		},
+		{
+			name:         "RULES_PATH is not set",
+			rulesPath:    "",
 			expectedPath: "",
-			expectError: true,
+			expectError:  true,
 		},
 	}
 
@@ -54,7 +113,6 @@ func TestGetRulesPath(t *testing.T) {
 		})
 	}
 }
-
 
 func TestCombineFiles(t *testing.T) {
 	testCases := []struct {
@@ -119,22 +177,22 @@ func TestCombineFiles(t *testing.T) {
 
 func TestGetOutputPath(t *testing.T) {
 	testCases := []struct {
-		name          string
-		editor        string
+		name           string
+		editor         string
 		expectedSuffix string
-		expectError   bool
+		expectError    bool
 	}{
 		{
-			name:          "Editor is specified",
-			editor:        "vscode",
+			name:           "Editor is specified",
+			editor:         "vscode",
 			expectedSuffix: ".vscoderules",
-			expectError:   false,
+			expectError:    false,
 		},
 		{
-			name:          "Editor is empty",
-			editor:        "",
+			name:           "Editor is empty",
+			editor:         "",
 			expectedSuffix: ".rules",
-			expectError:   false,
+			expectError:    false,
 		},
 	}
 

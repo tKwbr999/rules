@@ -7,7 +7,7 @@ import (
 // コマンドライン引数を解析する
 func ParseArgs() (string, []string) {
 	editor := ""
-	files := make([]string, 0)
+	var files []string
 
 	flag.Parse()
 
