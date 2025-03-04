@@ -1,0 +1,31 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with go test -c
+*.test
+
+# Vendor directory
+/vendor
+
+# Go modules
+go.sum
+
+# Environment files
+.env
+
+# Build results
+/build
+
+# VS Code settings
+.vscode/
+
+# Temporary files
+*~
+# Editor backups
+*._
+
+# Added by goreleaser init:
+dist/
