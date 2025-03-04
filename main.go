@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tKwbr999/rules_cli/internal/command"
-	"github.com/tKwbr999/rules_cli/internal/handler"
+	"github.com/tKwbr999/rules/internal/command"
+	"github.com/tKwbr999/rules/internal/handler"
 )
 
 // 使用方法を表示する

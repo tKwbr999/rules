@@ -54,7 +54,7 @@ func TestParseArgs(t *testing.T) {
 			defer func() { os.Args = originalArgs }()
 
 			// Set command-line arguments for the test case
-			os.Args = append([]string{"rules_cli"}, tc.args...)
+			os.Args = append([]string{"rules"}, tc.args...)
 
 			// Reset flag.CommandLine between tests
 			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)

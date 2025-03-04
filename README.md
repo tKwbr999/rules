@@ -1,4 +1,4 @@
-# rules_cli
+# rules
 
 rulesファイルを作成するコマンドラインツール
 
