@@ -5,18 +5,19 @@ import (
 )
 
 // コマンドライン引数を解析する
-func ParseArgs() (string, string, error) {
+func ParseArgs() (string, []string, error) {
 	editor := ""
-	env := ""
+	var files []string
 
 	flag.Parse()
 
 	if flag.NArg() > 0 {
 		editor = flag.Arg(0)
 	}
-	if flag.NArg() > 1 {
-		env = flag.Arg(1)
+
+	for i := 1; i < flag.NArg(); i++ {
+		files = append(files, flag.Arg(i))
 	}
 
-	return editor, env, nil
+	return editor, files, nil
 }

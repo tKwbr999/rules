@@ -2,37 +2,45 @@ package command
 
 import (
 	"os"
+	"reflect"
 	"testing"
 )
 
 func TestParseArgs(t *testing.T) {
 	testCases := []struct {
-		name          string
-		args          []string
+		name           string
+		args           []string
 		expectedEditor string
-		expectedEnv     string
-		expectedError   error
+		expectedFiles  []string
+		expectedError  error
 	}{
 		{
-			name:          "No arguments",
-			args:          []string{},
+			name:           "No arguments",
+			args:           []string{},
 			expectedEditor: "",
-			expectedEnv:     "",
-			expectedError:   nil,
+			expectedFiles:  []string{},
+			expectedError:  nil,
 		},
 		{
-			name:          "One argument (editor)",
-			args:          []string{"vim"},
+			name:           "One argument (editor)",
+			args:           []string{"vim"},
 			expectedEditor: "vim",
-			expectedEnv:     "",
-			expectedError:   nil,
+			expectedFiles:  []string{},
+			expectedError:  nil,
 		},
 		{
-			name:          "Two arguments (editor and env)",
-			args:          []string{"vim", "prod"},
+			name:           "Two arguments (editor and file)",
+			args:           []string{"vim", "file1"},
 			expectedEditor: "vim",
-			expectedEnv:     "prod",
-			expectedError:   nil,
+			expectedFiles:  []string{"file1"},
+			expectedError:  nil,
+		},
+		{
+			name:           "Multiple arguments (editor and files)",
+			args:           []string{"vim", "file1", "file2", "file3"},
+			expectedEditor: "vim",
+			expectedFiles:  []string{"file1", "file2", "file3"},
+			expectedError:  nil,
 		},
 	}
 
@@ -45,7 +53,7 @@ func TestParseArgs(t *testing.T) {
 			// Set command-line arguments for the test case
 			os.Args = append([]string{"rules_cli"}, tc.args...)
 
-			editor, env, err := ParseArgs()
+			editor, files, err := ParseArgs()
 
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
@@ -55,8 +63,8 @@ func TestParseArgs(t *testing.T) {
 				t.Errorf("Expected editor %q, got %q", tc.expectedEditor, editor)
 			}
 
-			if env != tc.expectedEnv {
-				t.Errorf("Expected env %q, got %q", tc.expectedEnv, env)
+			if !reflect.DeepEqual(files, tc.expectedFiles) {
+				t.Errorf("Expected files %v, got %v", tc.expectedFiles, files)
 			}
 		})
 	}

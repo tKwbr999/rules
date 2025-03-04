@@ -21,19 +21,40 @@ func getRulesPath() (string, error) {
 }
 
 // .mdファイルのリストを取得する
-func getMdFiles(rulesPath, env string) ([]string, error) {
-	filePattern := "*.md"
-	if env != "" {
-		filePattern = env + ".md"
+func getMdFiles(rulesPath string, files []string) ([]string, error) {
+	var mdFiles []string
+	var missingFiles []string
+
+	if len(files) == 0 {
+		// 環境が指定されていない場合は、すべての.mdファイルを取得
+		pattern := filepath.Join(rulesPath, "*.md")
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			return nil, fmt.Errorf("ファイルの検索に失敗しました: %w", err)
+		}
+		mdFiles = append(mdFiles, matches...)
+	} else {
+		// 環境が指定されている場合は、指定されたファイルのみを検索
+		for _, file := range files {
+			pattern := filepath.Join(rulesPath, file+".md")
+			matches, err := filepath.Glob(pattern)
+			if err != nil {
+				return nil, fmt.Errorf("ファイルの検索に失敗しました: %w", err)
+			}
+			if len(matches) > 0 {
+				mdFiles = append(mdFiles, matches...)
+			} else {
+				missingFiles = append(missingFiles, file+".md")
+			}
+		}
 	}
 
-	mdFiles, err := filepath.Glob(filepath.Join(rulesPath, filePattern))
-	if err != nil {
-		return nil, fmt.Errorf("ファイルの検索に失敗しました: %w", err)
+	if len(mdFiles) == 0 && len(missingFiles) == 0 {
+		return nil, fmt.Errorf("指定されたファイルが見つかりませんでした (パス: %s)", rulesPath)
 	}
 
-	if len(mdFiles) == 0 {
-		return nil, fmt.Errorf("%sに該当する.mdファイルが見つかりませんでした (パス: %s)", filePattern, rulesPath)
+	if len(missingFiles) > 0 {
+		fmt.Printf("警告: ファイルが見つかりませんでした: %s\n", strings.Join(missingFiles, ", "))
 	}
 
 	return mdFiles, nil
@@ -76,16 +97,17 @@ func printUsage() {
 	fmt.Println()
 	fmt.Println("引数:")
 	fmt.Println("  <エディタ>  出力ファイル名の一部として使用される（例: cline → .clinerules）")
-	fmt.Println("  [環境]     特定の環境用のmdファイルのみを使用する場合に指定（例: frontend）")
-	fmt.Println("             省略した場合はすべての.mdファイルが使用されます")
+	fmt.Println("  [ファイル...]  結合する.mdファイルのファイル名を指定します (例: frontend backend)")
+	fmt.Println("                ファイル名を指定しない場合は、すべての.mdファイルが使用されます")
 	fmt.Println()
 	fmt.Println("環境変数:")
 	fmt.Println("  RULES_PATH  .mdファイルが格納されているディレクトリのパス")
 	fmt.Println()
 	fmt.Println("例:")
-	fmt.Println("  rules cline           # すべての.mdファイルから.clinerules作成")
-	fmt.Println("  rules cline frontend  # frontend.mdファイルから.clinerules作成")
-	fmt.Println("  rules cursor backend  # backend.mdファイルから.cursorrules作成")
+	fmt.Println("  rules cline           # すべての.mdファイルから.clinerulesを作成")
+	fmt.Println("  rules cline frontend  # frontend.mdファイルからfrontend.mdを作成")
+	fmt.Println("  rules cursor backend  # backend.mdファイルからbackend.mdを作成")
+	fmt.Println("  rules cursor frontend backend # frontend.mdとbackend.mdを結合して.cursorrulesを作成")
 	fmt.Println("  rules -l              # 利用可能な.mdファイルの一覧を表示")
 }
 
@@ -111,7 +133,7 @@ func main() {
 	// リスト表示フラグが設定されている場合
 	if listFiles {
 		fmt.Println("RULES_PATH:", rulesPath)
-		mdFiles, err := getMdFiles(rulesPath, "")
+		mdFiles, err := getMdFiles(rulesPath, []string{})
 		if err != nil {
 			fmt.Printf("エラー: %v\n", err)
 			osExit(1)
@@ -124,7 +146,7 @@ func main() {
 	}
 
 	// コマンドライン引数の解析
-	editor, env, err := command.ParseArgs()
+	editor, files, err := command.ParseArgs()
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		printUsage()
@@ -132,7 +154,7 @@ func main() {
 	}
 
 	// .mdファイルのリスト取得
-	mdFiles, err := getMdFiles(rulesPath, env)
+	mdFiles, err := getMdFiles(rulesPath, files)
 	if err != nil {
 		fmt.Printf("エラー: %v\n", err)
 		osExit(1)
