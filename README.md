@@ -41,7 +41,7 @@ rules cline frontend
 rules cursor backend
 
 # frontend.mdとbackend.mdを結合しから.windsurfrules作成
-rules windsurf backend
+rules windsurf frontend backend
 ```
 
 ## 出力ファイル
