@@ -12,4 +12,4 @@ release-check:
 
 .PHONY: rule
 rule:
-	rules cline go-cli-develop basic commit
+	rules cline go-cli-develop basic commit shortcut

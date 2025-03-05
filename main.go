@@ -40,6 +40,7 @@ func main() {
 	// フラグを定義
 	var listFiles bool
 	flag.BoolVar(&listFiles, "l", false, "利用可能な.mdファイルの一覧を表示")
+	flag.BoolVar(&listFiles, "list", false, "利用可能な.mdファイルの一覧を表示")
 
 	// フラグを解析
 	flag.Parse()
